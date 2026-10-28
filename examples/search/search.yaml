@@ -1,0 +1,71 @@
+graphs:
+  # 一次搜索请求。入口是 Go 里的 search.Search = NewEntry[Request, Response]("search")：
+  # Request 的 uid、query 在整张图里都已写入；Response 的 results 必须在图结束前写入。
+  # 每个算子的耗时由 Go 侧的 graph.WrapCalls("metrics") 统一采集，这里不用写。
+  search:
+    do:
+      - parse:
+          call: parse_query              # query -> parsed
+
+      - recall:
+          fork:                          # 三路并发，全部结束后再往下走；各分支不能写同一个 key
+            - title:                     # 同一个 recall 算子，按 with: 召回不同的源，
+                call: recall             # 用 out: 把它的 docs 端口接到不同的 key
+                with:
+                  source: title
+                  limit: 20
+                out:
+                  docs: title_docs
+            - vector:                    # 向量召回慢且可丢：超时/失败就当没召回，
+                call: recall             # vec_docs 变成「可能缺席」
+                with:
+                  source: vector
+                  limit: 20
+                out:
+                  docs: vec_docs
+                timeout: 50ms
+                optional: true
+            - profile:
+                call: load_profile       # uid -> profile
+
+      - merge:                           # 算子的端口叫 primary / extra，接哪一路由这里决定
+          call: merge
+          in:
+            primary: title_docs
+            extra: vec_docs              # -> docs
+
+      - rerank:                          # 结果太少就不精排；它原地改写 docs，
+          call: rerank                   # 跳过时下游读到合并后的 docs，所以 docs 仍是「一定存在」
+          if: "size(docs) > 3"
+
+      - rank:
+          switch:                        # 按序求值，第一个命中的 case 生效；都不命中又没有 default 时报错
+            - personal:
+                when: "profile.HasHistory"   # CEL，编译期做类型检查
+                do:
+                  - p:
+                      call: personalize
+            - default:
+                do:
+                  - d:
+                      run: default_rank      # 内联子图
+
+      - detail:
+          wrap:
+            - retry:                     # ext/retry：读详情是幂等的，可以重试
+                attempts: 2
+                backoff: 5ms
+          do:
+            - fill:
+                call: fill_detail        # docs -> results
+
+      - log:                             # 后台记日志：不阻塞后面的任务、不写黑板；Run 返回前会等它结束
+          call: search_log
+          background: true
+
+  # 子图：没有 Entry，不能被直接运行，只能被 run 内联；
+  # 它读的 docs 在每个调用处按当时的数据流检查。
+  default_rank:
+    do:
+      - sort:
+          call: sort_by_score

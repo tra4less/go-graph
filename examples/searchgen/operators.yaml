@@ -1,0 +1,22 @@
+# 算子声明：图里 call / wrap 用的名字 → 实现它的 Go 函数（package 是完整的 import 路径）。
+# graphgen 据此生成 operators_gen.go，效果等同于 examples/search/options.go 里手写的 Options。
+# 改了这个文件要重新生成：go generate ./examples/searchgen
+x-search: &search github.com/tra4less/go-graph/examples/search   # x- 开头的字段被忽略，只用来放锚点
+
+operators:
+  parse_query:   { package: *search, func: ParseQuery }
+  recall:        { package: *search, func: Recall }           # RecallIn 里有 graph:",with" 字段，接收 with: 配置
+  load_profile:  { package: *search, func: LoadProfile }
+  merge:         { package: *search, func: Merge }
+  rerank:        { package: *search, func: Rerank }
+  personalize:   { package: *search, func: Personalize }
+  sort_by_score: { package: *search, func: SortByScore }
+  fill_detail:   { package: *search, func: (*Details).Fill }    # 方法：接收者成为 Receivers 的字段
+  search_log:    { package: *search, func: (*Logger).SearchLog }
+
+middleware:
+  retry:   { package: github.com/tra4less/go-graph/ext/retry, func: Retry }   # 通用重试中间件
+  metrics: { package: *search, func: (*Metrics).Timing }
+
+entries:
+  - { package: *search, var: Search }
