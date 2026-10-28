@@ -654,7 +654,7 @@ func reload(src []byte, imports []graph.Option) error {
 
 ### 代码生成：graphgen（可选）
 
-如果不想手写 `Options`，可以在 `operators.yaml` 中声明算子，由 [graphgen](graphgen/) 生成代码。生成的函数会在启动时检查方法接收者，一次列出所有为 nil 的接收者。
+如果不想手写 `Options`，可以在 `operators.yaml` 中声明算子，由 [graphgen](cmd/graphgen/) 生成代码。生成的函数会在启动时检查方法接收者，一次列出所有为 nil 的接收者。
 
 ```yaml
 x-search: &search github.com/tra4less/go-graph/examples/search   # 以 x- 开头的字段会被忽略，可用来定义锚点
@@ -754,7 +754,7 @@ opts, err := searchgen.Options(searchgen.Receivers{Details: details})
 ├── graph/          编排库（package graph）
 ├── ext/            核心不依赖的可选组件
 │   └── retry/      重试中间件
-├── graphgen/       可选的代码生成器（独立 module）
+├── cmd/graphgen/   可选的代码生成器（独立 module）
 └── examples/       可运行的示例
 ```
 
@@ -762,12 +762,12 @@ opts, err := searchgen.Options(searchgen.Receivers{Details: details})
 
 ## 开发
 
-仓库包含两个 module：根目录（`graph/` 和示例）和 `graphgen`，通过 `go.work` 关联。
+仓库包含两个 module：根目录（`graph/` 和示例）和 `cmd/graphgen`，通过 `go.work` 关联。
 
 ```sh
 go test -race ./...
-(cd graphgen && go test -race ./...)
-go run ./graphgen -in examples/searchgen/operators.yaml -out examples/searchgen/operators_gen.go -check
+(cd cmd/graphgen && go test -race ./...)
+(cd cmd/graphgen && go run . -in ../../examples/searchgen/operators.yaml -out ../../examples/searchgen/operators_gen.go -check)
 ```
 
 ## 许可证

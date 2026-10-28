@@ -175,7 +175,7 @@ func TestErrorsReportedTogetherWithPositions(t *testing.T) {
 
 // The example's committed file must match what graphgen generates.
 func TestExampleUpToDate(t *testing.T) {
-	dir := filepath.Join("..", "examples", "searchgen")
+	dir := filepath.Join("..", "..", "examples", "searchgen")
 	err := run(filepath.Join(dir, "operators.yaml"), filepath.Join(dir, "operators_gen.go"), true)
 	if errors.Is(err, errStale) {
 		t.Fatal("examples/searchgen/operators_gen.go is stale: run go generate ./examples/searchgen")

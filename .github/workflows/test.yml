@@ -13,11 +13,11 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: |
             go.sum
-            graphgen/go.sum
+            cmd/graphgen/go.sum
       - name: Test root module
         run: go test -race ./...
       - name: Test graphgen module
-        working-directory: graphgen
+        working-directory: cmd/graphgen
         run: |
-          go work init .. .
+          go work init ../.. .
           go test -race ./...

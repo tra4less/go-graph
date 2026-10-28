@@ -654,7 +654,7 @@ func reload(src []byte, imports []graph.Option) error {
 
 ### Code generation: graphgen (optional)
 
-Instead of writing `Options` by hand, declare the operators in `operators.yaml` and let [graphgen](graphgen/) generate it. The generated function also checks method receivers at startup and reports every nil one.
+Instead of writing `Options` by hand, declare the operators in `operators.yaml` and let [graphgen](cmd/graphgen/) generate it. The generated function also checks method receivers at startup and reports every nil one.
 
 ```yaml
 x-search: &search github.com/tra4less/go-graph/examples/search   # x- keys are ignored: anchors
@@ -754,7 +754,7 @@ Measured with `go test -bench . ./graph` (Intel Xeon Gold 6271C):
 ├── graph/          the library (package graph)
 ├── ext/            optional components the core does not depend on
 │   └── retry/      retry middleware
-├── graphgen/       optional code generator (separate module)
+├── cmd/graphgen/   optional code generator (separate module)
 └── examples/       runnable examples
 ```
 
@@ -762,12 +762,12 @@ A component under `ext/` lives in this module if it needs only `graph` and the s
 
 ## Development
 
-The repository holds two modules, the root (`graph/` and the examples) and `graphgen`, joined by `go.work`.
+The repository holds two modules, the root (`graph/` and the examples) and `cmd/graphgen`, joined by `go.work`.
 
 ```sh
 go test -race ./...
-(cd graphgen && go test -race ./...)
-go run ./graphgen -in examples/searchgen/operators.yaml -out examples/searchgen/operators_gen.go -check
+(cd cmd/graphgen && go test -race ./...)
+(cd cmd/graphgen && go run . -in ../../examples/searchgen/operators.yaml -out ../../examples/searchgen/operators_gen.go -check)
 ```
 
 ## License
